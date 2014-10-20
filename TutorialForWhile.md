@@ -2,7 +2,7 @@
 
 This document focuses on the internal mechanism of while loop in Python.
 
-We are going to disassemble one simple python file into bytecode and then illustate its functionality.
+We are going to disassemble one simple python file into bytecode and then illustrate its functionality.
 
 Here is the `CSC453/while.py` file:
 
@@ -39,3 +39,4 @@ This is the disassembled version:
         >>   40 LOAD_CONST               3 (None)
              43 RETURN_VALUE 
 ```
+Now we will dig into the python bytecode line by line and explain.
