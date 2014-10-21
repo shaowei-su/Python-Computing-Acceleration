@@ -125,12 +125,24 @@ fast_block_end:
             }
 ```
 In fast_block_end, the information stored in PyTryBlock is reloaded to return to the status before while loop.
-Specifically, the block is poped. Then the stack level is returned to the previous value stored in PyTryBlock by continuously popping the redundant variables in the stack. Besides, assign `WHY_NOT` to why to indicate that there is no error and continue to execute the next instruction by `JUMPTO` its instruction index:
+Specifically, the block is poped. Then the stack level is returned to the previous value stored in PyTryBlock by continuously popping the redundant variables in the stack. Besides, `WHY_NOT` is assigned to why to indicate that there is no error and continue to execute the next instruction by `JUMPTO` its instruction index:
 ```
   74 LOAD_CONST               5 (None)
 ```
 
+##The normal end of while loop
 
 
+If the comparison at line 15 returns Py_False to the value stack, then it will jump to line 74 to terminate the loop with similar process like `break`.
+```C
+case POP_BLOCK
+       {
+          PyTryBlock *b = PyFrame_BlockPop(f)                              while (STACK_LEVEL() > b->b_level) {
+              v = POP();
+              Py_DECREF(v);
+          }
+        }
+        continue;
+```
 
 
