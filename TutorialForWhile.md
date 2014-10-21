@@ -137,7 +137,8 @@ If the comparison at line 15 returns Py_False to the value stack, then it will j
 ```C
 case POP_BLOCK
        {
-          PyTryBlock *b = PyFrame_BlockPop(f)                              while (STACK_LEVEL() > b->b_level) {
+          PyTryBlock *b = PyFrame_BlockPop(f)                            
+          while (STACK_LEVEL() > b->b_level) {
               v = POP();
               Py_DECREF(v);
           }
