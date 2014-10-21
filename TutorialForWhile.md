@@ -103,7 +103,7 @@ On the other hand, the comparison at line 55 will determine if the loop will ter
      goto fast_block_end;
 ```
 we break out of the loop through fast_block_end.
-
+```
 fast_block_end:
         while (why != WHY_NOT && f->f_iblock > 0) {
             /* Peek at the current block. */
