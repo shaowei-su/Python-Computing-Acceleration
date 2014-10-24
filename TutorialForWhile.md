@@ -72,14 +72,27 @@ Instruction `SETUP_LOOP` creates a PyTryBlock to save the current status, which 
 ```c
   PyFrame_BlockSetup(f, opcode, INSTR_OFFSET() + oparg, STACK_LEVEL());
 ```
-
-Here f stands for the current FrameObject, `INSTR_OFFSET() + oparg` points to the instruction after while loop and `STACK_LEVEL()` equals to size of current value stack.
+Here `f` stands for the current FrameObject, `INSTR_OFFSET() + oparg` points to the instruction after while loop and `STACK_LEVEL()` equals to size of current value stack.
+```c
+void
+PyFrame_BlockSetup(PyFrameObject *f, int type, int handler, int level)
+{
+    PyTryBlock *b;
+    if (f->f_iblock >= CO_MAXBLOCKS)
+        Py_FatalError("XXX block stack overflow");
+    b = &f->f_blockstack[f->f_iblock++];
+    b->b_type = type; // CSC253: what kind of block it is 
+    b->b_level = level; // CSC253: value stack level to pop to 
+    b->b_handler = handler; // CSC253: where to jump to find the instruction index after while loop
+}
+```
+By increasing the number of `f_iblock` by one, the PyTryblock we created will be stored in the block stack of the PyFrameObject.
 
 ##The general procedure of while loop
 
 We start the illustration of loop with a general case that goes through the instructions and jump back to the begining of loop, regardless of `continue` and `break` situations.
 
-First of all, a judgement is made to determine whether the loop should continue or not. In this case, we are going to compare the value of i with integer 10, if the result is Py_True, it will then increase the value of i by 1 throuth `INPLACE_ADD` and then push the result to the top of value stack. Finally, the value of i will be printed out and execute the instruction:
+First of all, a judgement is made to determine whether the loop should continue or not. In this case, we are going to compare the value of i with integer 10, if the result is `Py_True`, it will then increase the value of i by 1 throuth `INPLACE_ADD` and then push the result to the top of value stack. Finally, the value of i will be printed out and execute the instruction:
 ```
   70 JUMP_ABSOLUTE            9
 ```
@@ -90,13 +103,13 @@ to jump back to the start of loop.
 
 In Python, `continue ` and `break` work same as in other languages like C and Java.
 
-After the comparison at line 40, if the result is Py_True then execute the instruction:
+After the comparison at line 40, if the result is `Py_True` then execute the instruction:
 ```
  5          43 JUMP_ABSOLUTE            9
 ```
 to jump back to the start of loop, without execution of the remaining instructions.
 
-On the other hand, the comparison at line 55 will determine if the loop will terminate or not. if the result is Py_True, then by the instruction:
+On the other hand, the comparison at line 55 will determine if the loop will terminate or not. if the result is `Py_True`, then by the instruction:
 ```c
   case BREAK_LOOP:
      why = WHY_BREAK;
@@ -133,7 +146,7 @@ Specifically, the block is poped. Then the stack level is returned to the previo
 ##The normal end of while loop
 
 
-If the comparison at line 15 returns Py_False to the value stack, then it will jump to line 74 to terminate the loop with similar process like `break`.
+If the comparison at line 15 returns `Py_False` to the value stack, then it will jump to line 74 to terminate. The `PyFrame_BlockPop(f)` will pop and return the PyTryBlock we stored in block stack. Then reload the stack level to previous state.
 ```C
 case POP_BLOCK
        {
@@ -145,5 +158,17 @@ case POP_BLOCK
         }
         continue;
 ```
+```c
+PyTryBlock *
+PyFrame_BlockPop(PyFrameObject *f)
+{
+    PyTryBlock *b;
+    if (f->f_iblock <= 0)
+        Py_FatalError("XXX block stack underflow");
+    b = &f->f_blockstack[--f->f_iblock];
+    return b;
+}
+```
+
 
 
