@@ -1,4 +1,4 @@
-#Overview for this topic
+#Tutorial for while loop in Python
 
 This document focuses on the internal mechanism of while loop in Python.
 
@@ -84,7 +84,7 @@ Instruction `SETUP_LOOP` creates a PyTryBlock to save the current status, which 
 ```
 Here `f` stands for the current FrameObject, `INSTR_OFFSET() + oparg` points to the instruction after while loop and `STACK_LEVEL()` equals to size of current value stack.
 
-In this case, INSTR_OFFESTE() returns value 9 and oparg equals to 65, the result points to line number 74, where this program terminates. opcode is 
+In this case, INSTR_OFFESTE() returns value 9 and oparg equals to 65, the result points to line number 74, where this program terminates. And opcode is `SETUP_LOOP`.
 ```c
 void
 PyFrame_BlockSetup(PyFrameObject *f, int type, int handler, int level)
@@ -98,13 +98,13 @@ PyFrame_BlockSetup(PyFrameObject *f, int type, int handler, int level)
     b->b_handler = handler; // CSC253: where to jump to find the instruction index after while loop
 }
 ```
- If the number of blocks reaches the maximum then one error message will be printed out. Here the size of `CO_MAXBLOCKS`(max number of static block nested within a function)is defined as 20 in `code.h` file. By increasing the number of `f_iblock` by one, the PyTryblock we created will be stored in the block stack of the PyFrameObject.
+ If the number of blocks reaches the maximum then one error message will be printed out. Here the size of `CO_MAXBLOCKS`(max number of static block nested within a function) is defined as 20 in `code.h` file. By increasing the number of `f_iblock` by one, the PyTryblock we created will be stored in the block stack of the PyFrameObject.
 
 ##The general procedure of while loop
 
 We start the illustration of loop with a general case that goes through the instructions and jump back to the begining of loop, regardless of `continue` and `break` situations.
 
-First of all, a judgement is made to determine whether the loop should continue or not. In this case, we are going to compare the value of i with integer 10, if the result is `Py_True`, it will then increase the value of i by 1 through `INPLACE_ADD` and then push the result to the top of value stack. Finally, the value of i will be printed out and execute the instruction:
+First of all, a judgement is made to determine whether the loop should continue or not. In this case, we are going to compare the value of i with integer 10, if the result is `Py_True`, it will increase the value of i by 1 through `INPLACE_ADD` and then push the result to the top of value stack. Finally, the value of i will be printed out and execute the instruction:
 ```
   70 JUMP_ABSOLUTE            9
 ```
@@ -131,8 +131,6 @@ On the other hand, the comparison at line 55 will determine if the loop will ter
      why = WHY_BREAK;
      goto fast_block_end;
 ```
-As mentioned above, when i becomes 8 the result of comparion `if i > 7` is true and break statement will be taken. By doing so, the last number printed out will be 7.
-
 We break out of the loop through fast_block_end.
 ```
 fast_block_end:
@@ -160,6 +158,8 @@ Specifically, the block is poped. Then the stack level is returned to the previo
 ```
   74 LOAD_CONST               5 (None)
 ```
+
+As mentioned above, when i becomes 8 the result of comparion `if i > 7` is true and break statement will be taken. By doing so, the last number printed out will be 7.
 
 ##The normal end of while loop
 
