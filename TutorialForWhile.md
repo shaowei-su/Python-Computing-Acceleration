@@ -16,6 +16,16 @@ Here is the `CSC453/while.py` file:
   7         break
   8     print i
 ```
+The execution result is:
+
+```
+3
+4
+5
+6
+7
+```
+
 Then we use the dis tool:
 
 ```
@@ -67,12 +77,14 @@ Now we will dig into the python bytecode line by line and explain. Almost all of
 
 ##Set up the loop
 
-Instruction `SETUP_LOOP` creates a PyTryBlock to save the current status, which will be uesd after loop:
+Instruction `SETUP_LOOP` creates a PyTryBlock to save the current status, which will be used after loop:
 
 ```c
   PyFrame_BlockSetup(f, opcode, INSTR_OFFSET() + oparg, STACK_LEVEL());
 ```
 Here `f` stands for the current FrameObject, `INSTR_OFFSET() + oparg` points to the instruction after while loop and `STACK_LEVEL()` equals to size of current value stack.
+
+In this case, INSTR_OFFESTE() returns value 9 and oparg equals to 65, the result points to line number 74, where this program terminates.
 ```c
 void
 PyFrame_BlockSetup(PyFrameObject *f, int type, int handler, int level)
@@ -92,30 +104,36 @@ By increasing the number of `f_iblock` by one, the PyTryblock we created will be
 
 We start the illustration of loop with a general case that goes through the instructions and jump back to the begining of loop, regardless of `continue` and `break` situations.
 
-First of all, a judgement is made to determine whether the loop should continue or not. In this case, we are going to compare the value of i with integer 10, if the result is `Py_True`, it will then increase the value of i by 1 throuth `INPLACE_ADD` and then push the result to the top of value stack. Finally, the value of i will be printed out and execute the instruction:
+First of all, a judgement is made to determine whether the loop should continue or not. In this case, we are going to compare the value of i with integer 10, if the result is `Py_True`, it will then increase the value of i by 1 through `INPLACE_ADD` and then push the result to the top of value stack. Finally, the value of i will be printed out and execute the instruction:
 ```
   70 JUMP_ABSOLUTE            9
 ```
 
 to jump back to the start of loop.
 
+For i = {0, 1, 2, 3, 4, 5, 6, 7}, the loop will be executed. When i equals to 7, the `if i > 7` statement will be satisfied after the addition on line 3 in file `CSC453/while.py` and then break out of loop. Details could be found in next topic.
+
 ##Continue and break
 
-In Python, `continue ` and `break` work same as in other languages like C and Java.
+In Python, `continue ` and `break` works the same as in other languages like C and Java.
 
-After the comparison at line 40, if the result is `Py_True` then execute the instruction:
+After the comparison at line 40 to determine whether i is less than 3 or not, if the result is `Py_True` then execute the instruction:
 ```
  5          43 JUMP_ABSOLUTE            9
 ```
 to jump back to the start of loop, without execution of the remaining instructions.
 
-On the other hand, the comparison at line 55 will determine if the loop will terminate or not. if the result is `Py_True`, then by the instruction:
+In our example, when i = {0, 1, 2} the loop will be continued without the following comparison and print. As a result of this, the first number printed by `CSC453/while.py` should be 3.
+
+On the other hand, the comparison at line 55 will determine if the loop will terminate or not. If the result is `Py_True`, then by the instruction:
 ```c
   case BREAK_LOOP:
      why = WHY_BREAK;
      goto fast_block_end;
 ```
-we break out of the loop through fast_block_end.
+As mentioned above, when i becomes 8 the result of comparion `if i > 7` is true and break statement will be taken. By doing so, the last number printed out will be 7.
+
+We break out of the loop through fast_block_end.
 ```
 fast_block_end:
         while (why != WHY_NOT && f->f_iblock > 0) {
