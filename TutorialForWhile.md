@@ -84,7 +84,7 @@ Instruction `SETUP_LOOP` creates a PyTryBlock to save the current status, which 
 ```
 Here `f` stands for the current FrameObject, `INSTR_OFFSET() + oparg` points to the instruction after while loop and `STACK_LEVEL()` equals to size of current value stack.
 
-In this case, INSTR_OFFESTE() returns value 9 and oparg equals to 65, the result points to line number 74, where this program terminates.
+In this case, INSTR_OFFESTE() returns value 9 and oparg equals to 65, the result points to line number 74, where this program terminates. opcode is 
 ```c
 void
 PyFrame_BlockSetup(PyFrameObject *f, int type, int handler, int level)
@@ -98,7 +98,7 @@ PyFrame_BlockSetup(PyFrameObject *f, int type, int handler, int level)
     b->b_handler = handler; // CSC253: where to jump to find the instruction index after while loop
 }
 ```
-By increasing the number of `f_iblock` by one, the PyTryblock we created will be stored in the block stack of the PyFrameObject.
+ If the number of blocks reaches the maximum then one error message will be printed out. Here the size of `CO_MAXBLOCKS`(max number of static block nested within a function)is defined as 20 in `code.h` file. By increasing the number of `f_iblock` by one, the PyTryblock we created will be stored in the block stack of the PyFrameObject.
 
 ##The general procedure of while loop
 
@@ -156,37 +156,17 @@ fast_block_end:
             }
 ```
 In fast_block_end, the information stored in PyTryBlock is reloaded to return to the status before while loop.
-Specifically, the block is poped. Then the stack level is returned to the previous value stored in PyTryBlock by continuously popping the redundant variables in the stack. Besides, `WHY_NOT` is assigned to why to indicate that there is no error and continue to execute the next instruction by `JUMPTO` its instruction index:
+Specifically, the block is poped. Then the stack level is returned to the previous value stored in PyTryBlock by continuously popping the redundant variables in the stack. Besides, `WHY_NOT` is assigned to `why` to indicate that there is no error and continue to execute the next instruction by `JUMPTO` its instruction index:
 ```
   74 LOAD_CONST               5 (None)
 ```
 
 ##The normal end of while loop
 
+If there is no break statement inside the while loop, then it will terminates through the control statement `if i < 10`.
 
-If the comparison at line 15 returns `Py_False` to the value stack, then it will jump to line 74 to terminate. The `PyFrame_BlockPop(f)` will pop and return the PyTryBlock we stored in block stack. Then reload the stack level to previous state.
-```C
-case POP_BLOCK
-       {
-          PyTryBlock *b = PyFrame_BlockPop(f)                            
-          while (STACK_LEVEL() > b->b_level) {
-              v = POP();
-              Py_DECREF(v);
-          }
-        }
-        continue;
-```
-```c
-PyTryBlock *
-PyFrame_BlockPop(PyFrameObject *f)
-{
-    PyTryBlock *b;
-    if (f->f_iblock <= 0)
-        Py_FatalError("XXX block stack underflow");
-    b = &f->f_blockstack[--f->f_iblock];
-    return b;
-}
-```
+When the comparison at line 15 returns `Py_False` to the value stack, then it will jump to line 74 to terminate. The `PyFrame_BlockPop(f)` will pop and return the PyTryBlock we stored in block stack. Then reload the stack level to previous state. This procedure is quite similar to the one when we break out of loop.
+
 
 
 
