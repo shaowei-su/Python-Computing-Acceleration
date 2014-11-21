@@ -32,7 +32,7 @@ def mc_numpy(paths, dt, interest, volatility):
         paths[:, j] = step_numpy(dt, prices, c0, c1, noises)
 ```
 
-![Alt text](https://raw.githubusercontent.com/shaowei-su/CSC453/master/NumbaproTests/1.png)
+![](https://raw.githubusercontent.com/shaowei-su/CSC453/master/NumbaproTests/1.png=100*20)
 
 
 
