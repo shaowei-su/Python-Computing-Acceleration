@@ -4,7 +4,7 @@ Testing GPU: GeForce GTX 870M
 
 After the installation of Numbapro, we digged into its performance optimization and tried different ways of accelerating.
 
-Generally, there are three methods to improve the python computing ability. First of all, using `vectorize` to automatically accelerate is a very simple but useful way, which converts a scalar implementatioin to a vectorized program. Besides, Numbapro provides CUDA libraries Host API, like cuRAND random number generator that performs high quality GPU-accelerated random number generation 8X faster than typical CPU only code. Finally, it is also possible to write CUDA directly in Python code with the interaction to CUDA driver API supported by Numbapro.
+Generally, there are three methods to improve the python computing ability. First of all, using `vectorize` to automatically accelerate is a very simple but useful way, which converts a scalar implementatioin to a vectorized program. Besides, Numbapro provides CUDA libraries Host API, like `cuRAND` random number generator that performs high quality GPU-accelerated random number generation 8X faster than typical CPU only code. Finally, it is also possible to write CUDA directly in Python code with the interaction to CUDA driver API supported by Numbapro.
 
 ## Monte Carlo Option Pricer via Numpy
 
@@ -62,7 +62,7 @@ def mc_gpuvec(paths, dt, interest, volatility):
         noises = np.random.normal(0., 1., prices.size)
         paths[:, j] = step_gpuvec(prices, dt, c0, c1, noises)
 
-    ```
+```
 
 <img src="https://raw.githubusercontent.com/shaowei-su/CSC453/master/NumbaproTests/4.png" width="400px" height="188px">
 
@@ -132,3 +132,7 @@ def mc_cuda(paths, dt, interest, volatility):
 ```
 
 <img src="https://raw.githubusercontent.com/shaowei-su/CSC453/master/NumbaproTests/5.png" width="400px" height="188px">
+
+With the help of JIT compile and cuRAND library, we finally get a 18x speed up.
+
+We are now still woring on our own examples to write CUDA directly in Python codes.
