@@ -134,8 +134,9 @@ def Blowfish_encipherG(Text, s, p):
 
 ##Performance report
 
+<img src="https://raw.githubusercontent.com/shaowei-su/CSC453/master/FinalProjects/performanceReport.png" width="400px" height="188px">
 
-
+As can be seen from the picture, gpu parallel with shared memory speed up for almost 700 times at most. 
 
 
 
