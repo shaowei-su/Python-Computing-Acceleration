@@ -73,7 +73,69 @@ As can be seen from the example, numbapro enables python codes with most of its 
 
 ##Blowfish encryption
 
-Blowfish enciphers a picture read in bytes with multiple calculation, and the decipher part can be used to verify the correctness of encryption.
+Blowfish enciphers a picture read in bytes with multiple calculation, and the decipher part can be used to verify the correctness of encryption. Since the all parts of the array are independent, this process can be conducted with parallelism.
+
+The gpu parallel version:
+
+```python
+
+Text = cuda.to_device(fileI)
+dS = cuda.to_device(S1)
+dP = cuda.to_device(P)
+Blowfish_encipherG[bpg, tpb](Text, dS, dP)
+Text.to_host()
+
+...
+
+@cuda.jit('void(uint32[:], uint32[:], uint32[:])', target='gpu')
+def Blowfish_encipherG(Text, s, p):
+    sS = cuda.shared.array(shape=(1024), dtype=uint32)
+    sP = cuda.shared.array(shape=(18), dtype=uint32)
+    tid = cuda.threadIdx.x
+    gid = cuda.grid(1)
+    interval = 1024/tpb
+    for i in range (tid*interval, (tid+1)*interval, 1):
+        sS[i] = s[i]
+    cuda.syncthreads()
+    if tid<N+2:
+        sP[tid] = p[tid]
+    cuda.syncthreads()
+    if gid*2+1 < len(Text)/4 and tid < cuda.blockDim.x:
+        xl = Text[gid*2]
+        xr = Text[gid*2+1]
+        for j in range (0, N, 1):
+            xl = xl ^ sP[j]
+            x = xl
+            d = x & 0x00FF 
+            x >>= 8
+            c = x & 0x00FF
+            x >>= 8
+            b = x & 0x00FF
+            x >>= 8  
+            a = x & 0x00FF
+            y = sS[a] + sS[256+b]
+            y = y ^ sS[512+c]
+            y = y + sS[768+d]
+            xr = y ^ xr
+            temp = xl
+            xl = xr
+            xr = temp
+        temp = xl
+        xl = xr
+        xr = temp
+        xr = xr ^ sP[N]
+        xl = xl ^ sP[N + 1]
+        cuda.syncthreads()
+        Text[gid*2] = xl
+        Text[gid*2+1] = xr
+    cuda.syncthreads()
+
+```
+
+##Performance report
+
+
+
 
 
 
