@@ -1,4 +1,4 @@
-CSC453
+Python computing acceleration
 ======
 
 Dynamic language and software development
